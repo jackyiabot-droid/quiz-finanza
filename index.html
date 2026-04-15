@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuizFinanza — Gioco Didattico</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="app__header">
+      <h1>🎓 QuizFinanza</h1>
+      <p class="subtitle">Sistema finanziario · Carte · Organizzazione del lavoro</p>
+    </header>
+
+    <!-- Schermata iniziale -->
+    <section id="screen-start" class="screen">
+      <h2>📚 Impara e poi mettiti alla prova</h2>
+      <p>Il gioco è in due fasi per ogni concetto:<br>
+      <strong>1)</strong> Ti spiego la teoria · <strong>2)</strong> Ti interrogo · Ogni risposta corretta vale <strong>10 punti</strong>.</p>
+      <div class="categories">
+        <button class="btn btn--cat" data-category="all">🎯 Tutti gli argomenti</button>
+        <button class="btn btn--cat" data-category="finanza">💰 Sistema finanziario</button>
+        <button class="btn btn--cat" data-category="carte">💳 Carte di credito/debito</button>
+        <button class="btn btn--cat" data-category="lavoro">🏢 Organizzazione del lavoro</button>
+      </div>
+      <div class="best">
+        Miglior punteggio: <span id="bestScore">0</span>
+      </div>
+    </section>
+
+    <!-- Schermata LEZIONE -->
+    <section id="screen-lesson" class="screen hidden">
+      <div class="hud">
+        <div class="hud__item">📖 Lezione <span id="lIndex">1</span>/<span id="lTotal">10</span></div>
+        <div class="hud__item">Punteggio: <strong id="scoreLesson">0</strong></div>
+      </div>
+      <div class="progress"><div id="progressBarLesson" class="progress__bar"></div></div>
+      <div class="lesson-card">
+        <div class="lesson-badge">ARGOMENTO</div>
+        <h2 id="lessonTopic" class="lesson-topic"></h2>
+        <div id="lessonContent" class="lesson-content"></div>
+      </div>
+      <button id="readyBtn" class="btn btn--primary">Ho capito, interrogami →</button>
+    </section>
+
+    <!-- Schermata INTERROGAZIONE -->
+    <section id="screen-quiz" class="screen hidden">
+      <div class="hud">
+        <div class="hud__item">❓ Domanda <span id="qIndex">1</span>/<span id="qTotal">10</span></div>
+        <div class="hud__item">Punteggio: <strong id="score">0</strong></div>
+      </div>
+      <div class="progress"><div id="progressBar" class="progress__bar"></div></div>
+      <div id="questionBox" class="question"></div>
+      <div id="answers" class="answers"></div>
+      <div id="feedback" class="feedback"></div>
+      <button id="nextBtn" class="btn btn--primary hidden">Prossima lezione →</button>
+    </section>
+
+    <!-- Schermata finale -->
+    <section id="screen-end" class="screen hidden">
+      <h2>🏁 Partita completata!</h2>
+      <div class="final">
+        <div class="final__score"><span id="finalScore">0</span> / 100</div>
+        <div id="finalMessage" class="final__msg"></div>
+        <div class="final__stats">
+          <div>✅ Corrette: <strong id="correctCount">0</strong></div>
+          <div>❌ Errate: <strong id="wrongCount">0</strong></div>
+        </div>
+      </div>
+      <button id="restartBtn" class="btn btn--primary">🔁 Rigioca</button>
+    </section>
+
+    <footer class="app__footer">
+      <p>Creato per imparare · <a href="https://github.com" target="_blank">Codice sorgente</a></p>
+    </footer>
+  </main>
+
+  <script src="questions.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
