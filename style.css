@@ -1040,6 +1040,23 @@ a:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 4px; }
   box-shadow: 0 8px 22px -6px rgba(251,191,36,0.45);
 }
 
+/* Variante "hot" — più sbagliate (rosso/arancio) */
+.btn--wrong-mode.btn--hot {
+  background:
+    linear-gradient(180deg, rgba(239,68,68,0.22), rgba(255,138,0,0.10)),
+    var(--bg-3);
+  border-color: rgba(239,68,68,0.6);
+  color: #ffb4a8;
+}
+.btn--wrong-mode.btn--hot:hover {
+  background:
+    linear-gradient(180deg, rgba(239,68,68,0.32), rgba(255,138,0,0.14)),
+    var(--bg-4);
+  border-color: rgba(239,68,68,0.9);
+  color: #ffd2c8;
+  box-shadow: 0 8px 22px -6px rgba(239,68,68,0.5);
+}
+
 /* Nav-buttons: permetti wrap su mobile stretti */
 .nav-buttons {
   display: flex;

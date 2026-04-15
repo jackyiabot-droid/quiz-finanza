@@ -30,6 +30,9 @@
       <button id="wrongOnlyBtn" class="btn btn--wrong-mode hidden">
         🔁 Ripassa solo gli sbagliati (<span id="wrongCountHome">0</span>)
       </button>
+      <button id="mostWrongBtn" class="btn btn--wrong-mode btn--hot hidden">
+        🔥 Ripassa le più sbagliate (<span id="mostWrongCount">0</span>)
+      </button>
       <div class="best">
         Miglior punteggio: <span id="bestScore">0</span>
       </div>
@@ -48,7 +51,7 @@
         <div id="lessonContent" class="lesson-content"></div>
       </div>
       <div class="nav-buttons">
-        <button id="homeBtnLesson" class="btn btn--back btn--icon" aria-label="Torna alla home">🏠</button>
+        <button id="homeBtnLesson" class="btn btn--back btn--icon" data-action="home" aria-label="Torna alla home">🏠</button>
         <button id="backBtnLesson" class="btn btn--back">← Indietro</button>
         <button id="readyBtn" class="btn btn--primary">Ho capito, interrogami →</button>
       </div>
@@ -65,7 +68,7 @@
       <div id="answers" class="answers"></div>
       <div id="feedback" class="feedback"></div>
       <div class="nav-buttons">
-        <button id="homeBtnQuiz" class="btn btn--back btn--icon" aria-label="Torna alla home">🏠</button>
+        <button id="homeBtnQuiz" class="btn btn--back btn--icon" data-action="home" aria-label="Torna alla home">🏠</button>
         <button id="backBtnQuiz" class="btn btn--back">← Indietro</button>
         <button id="nextBtn" class="btn btn--primary hidden">Prossima lezione →</button>
       </div>
@@ -83,7 +86,7 @@
         </div>
       </div>
       <div class="nav-buttons">
-        <button id="homeBtnEnd" class="btn btn--back btn--icon" aria-label="Torna alla home">🏠</button>
+        <button id="homeBtnEnd" class="btn btn--back btn--icon" data-action="home" aria-label="Torna alla home">🏠</button>
         <button id="reviewBtn" class="btn btn--back">← Rivedi le risposte</button>
         <button id="restartBtn" class="btn btn--primary">🔁 Rigioca</button>
       </div>

@@ -46,34 +46,63 @@ function showScreen(name) {
   screens[name].classList.remove("hidden");
 }
 
-// --- Persistenza domande sbagliate (per "Ripassa solo gli sbagliati") ---
+// --- Persistenza domande sbagliate con CONTEGGIO (Map questionText -> count) ---
 const WRONG_KEY = "quiz_wrong_questions";
-function loadWrongSet() {
+const MOST_WRONG_THRESHOLD = 2; // da 2 errori in su = "più sbagliata"
+
+function loadWrongMap() {
   try {
     const raw = localStorage.getItem(WRONG_KEY);
-    return new Set(raw ? JSON.parse(raw) : []);
-  } catch { return new Set(); }
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    // Migrazione: se era un array (vecchio formato Set), convertilo a map con count=1
+    if (Array.isArray(parsed)) {
+      const m = {};
+      parsed.forEach((q) => { m[q] = 1; });
+      return m;
+    }
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch { return {}; }
 }
-function saveWrongSet(set) {
-  localStorage.setItem(WRONG_KEY, JSON.stringify([...set]));
+function saveWrongMap(map) {
+  localStorage.setItem(WRONG_KEY, JSON.stringify(map));
 }
 function markWrong(questionText) {
-  const s = loadWrongSet();
-  s.add(questionText);
-  saveWrongSet(s);
+  const m = loadWrongMap();
+  m[questionText] = (m[questionText] || 0) + 1;
+  saveWrongMap(m);
 }
 function unmarkWrong(questionText) {
-  const s = loadWrongSet();
-  if (s.delete(questionText)) saveWrongSet(s);
+  const m = loadWrongMap();
+  if (m[questionText] != null) {
+    delete m[questionText];
+    saveWrongMap(m);
+  }
+}
+function wrongQuestions() {
+  return Object.keys(loadWrongMap());
+}
+function mostWrongQuestions() {
+  const m = loadWrongMap();
+  return Object.entries(m)
+    .filter(([, c]) => c >= MOST_WRONG_THRESHOLD)
+    .sort((a, b) => b[1] - a[1])
+    .map(([q]) => q);
 }
 function updateWrongOnlyButton() {
-  const s = loadWrongSet();
-  const btn = $("wrongOnlyBtn");
-  const count = $("wrongCountHome");
-  if (!btn || !count) return;
-  count.textContent = s.size;
-  if (s.size > 0) btn.classList.remove("hidden");
-  else btn.classList.add("hidden");
+  const all = wrongQuestions();
+  const most = mostWrongQuestions();
+
+  const btn1 = $("wrongOnlyBtn"), count1 = $("wrongCountHome");
+  if (btn1 && count1) {
+    count1.textContent = all.length;
+    btn1.classList.toggle("hidden", all.length === 0);
+  }
+  const btn2 = $("mostWrongBtn"), count2 = $("mostWrongCount");
+  if (btn2 && count2) {
+    count2.textContent = most.length;
+    btn2.classList.toggle("hidden", most.length === 0);
+  }
 }
 
 // --- Init ---
@@ -85,7 +114,8 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => startGame({ category: btn.dataset.category }));
   });
 
-  $("wrongOnlyBtn").addEventListener("click", () => startGame({ wrongOnly: true }));
+  $("wrongOnlyBtn").addEventListener("click", () => startGame({ wrongOnly: "all" }));
+  $("mostWrongBtn").addEventListener("click", () => startGame({ wrongOnly: "most" }));
 
   $("readyBtn").addEventListener("click", () => showQuestion());
   $("nextBtn").addEventListener("click", nextCard);
@@ -93,9 +123,12 @@ document.addEventListener("DOMContentLoaded", () => {
   $("backBtnLesson").addEventListener("click", goBackFromLesson);
   $("backBtnQuiz").addEventListener("click", goBackFromQuiz);
   $("reviewBtn").addEventListener("click", goReviewLastCard);
-  $("homeBtnLesson").addEventListener("click", goHome);
-  $("homeBtnQuiz").addEventListener("click", goHome);
-  $("homeBtnEnd").addEventListener("click", goHome);
+
+  // Event delegation per tutti i bottoni Home (più robusto degli ID)
+  document.body.addEventListener("click", (e) => {
+    const el = e.target.closest('[data-action="home"]');
+    if (el) { e.preventDefault(); goHome(); }
+  });
 });
 
 // --- Torna alla home ---
@@ -115,12 +148,13 @@ function shuffle(arr) {
 }
 
 // --- Avvio partita ---
-// opts: { category: "all"|"finanza"|"carte"|"lavoro" } oppure { wrongOnly: true }
+// opts: { category: "all"|"finanza"|"carte"|"lavoro" } oppure { wrongOnly: "all"|"most" }
 function startGame(opts) {
   let pool;
   if (opts && opts.wrongOnly) {
-    const wrongSet = loadWrongSet();
-    pool = QUESTIONS.filter((q) => wrongSet.has(q.question));
+    const targetList = opts.wrongOnly === "most" ? mostWrongQuestions() : wrongQuestions();
+    const targetSet = new Set(targetList);
+    pool = QUESTIONS.filter((q) => targetSet.has(q.question));
     if (pool.length === 0) { goHome(); return; }
   } else {
     const category = opts && opts.category ? opts.category : "all";
