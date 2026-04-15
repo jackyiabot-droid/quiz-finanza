@@ -877,6 +877,141 @@ a:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 4px; }
   .answer.wrong { animation: none !important; }
 }
 
+/* =====================================================================
+   Fun animations: combo badge, confetti, emoji floaters, shake, celebration
+   ===================================================================== */
+
+/* --- Combo badge --- */
+.combo-badge {
+  position: fixed;
+  top: calc(var(--sa-top) + 16px);
+  right: calc(var(--sa-right) + 16px);
+  z-index: 9000;
+  padding: 10px 16px;
+  border-radius: var(--r-full);
+  background: linear-gradient(135deg, #ff8a00, #ff3d7f);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  box-shadow:
+    0 8px 24px -6px rgba(255,61,127,0.55),
+    0 2px 6px rgba(255,138,0,0.35),
+    0 0 0 1px rgba(255,255,255,0.18) inset;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px) scale(0.8);
+  transition: opacity var(--dur-med) var(--ease-out),
+              transform var(--dur-med) var(--ease-spring);
+}
+.combo-badge.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  animation: comboPulse 0.6s var(--ease-spring);
+}
+.combo-badge.hide {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.85);
+}
+@keyframes comboPulse {
+  0%   { transform: translateY(0) scale(0.6); }
+  55%  { transform: translateY(0) scale(1.15); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* --- Confetti particles --- */
+.confetti {
+  position: fixed;
+  top: 0; left: 0;
+  width: 8px; height: 12px;
+  pointer-events: none;
+  z-index: 9500;
+  will-change: transform, opacity;
+  border-radius: 2px;
+  animation: confettiFall var(--dur, 1500ms) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform: translate(var(--x), var(--y)) rotate(0deg);
+}
+@keyframes confettiFall {
+  0% {
+    opacity: 1;
+    transform: translate(var(--x), var(--y)) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate(calc(var(--x) + var(--dx)), calc(var(--y) + var(--dy)))
+      rotate(var(--rot)) scale(0.6);
+  }
+}
+
+/* --- Emoji floaters --- */
+.floater {
+  position: fixed;
+  top: 0; left: 0;
+  font-size: 1.75rem;
+  pointer-events: none;
+  z-index: 9400;
+  will-change: transform, opacity;
+  transform: translate(var(--x), var(--y));
+  animation: floatUp 2000ms var(--ease-out) forwards;
+  user-select: none;
+}
+.floater.down {
+  animation: floatDown 2000ms var(--ease-out) forwards;
+}
+@keyframes floatUp {
+  0%   { opacity: 0; transform: translate(var(--x), var(--y)) scale(0.6); }
+  15%  { opacity: 1; transform: translate(var(--x), calc(var(--y) - 10px)) scale(1.15); }
+  100% { opacity: 0; transform: translate(var(--x), calc(var(--y) - 110px)) scale(0.9); }
+}
+@keyframes floatDown {
+  0%   { opacity: 0; transform: translate(var(--x), var(--y)) scale(0.7); }
+  20%  { opacity: 1; transform: translate(var(--x), calc(var(--y) + 6px)) scale(1); }
+  100% { opacity: 0; transform: translate(var(--x), calc(var(--y) + 70px)) scale(0.9); }
+}
+
+/* --- Screen shake on wrong answer --- */
+.app.shake {
+  animation: appShake 300ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes appShake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-5px); }
+  40%, 60% { transform: translateX(5px); }
+}
+
+/* --- Final-screen celebration --- */
+.final__score.celebrate {
+  animation: scoreBounce 700ms var(--ease-spring);
+}
+.final__score.record-glow {
+  animation: recordPulse 1.8s ease-in-out infinite;
+}
+@keyframes scoreBounce {
+  0%   { transform: scale(0.3); opacity: 0; }
+  60%  { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes recordPulse {
+  0%, 100% {
+    text-shadow: 0 0 0 rgba(76,175,80,0);
+    filter: brightness(1);
+  }
+  50% {
+    text-shadow: 0 0 28px var(--accent-glow), 0 0 12px var(--accent);
+    filter: brightness(1.15);
+  }
+}
+
+/* --- Reduced motion: disable decorative animations --- */
+@media (prefers-reduced-motion: reduce) {
+  .confetti, .floater, .combo-badge { display: none !important; }
+  .app.shake { animation: none !important; }
+  .final__score.celebrate,
+  .final__score.record-glow { animation: none !important; }
+}
+
 /* --------------------------- Print (tidy) --------------------------- */
 @media print {
   body { background: #fff; color: #000; padding: 0; }
