@@ -1012,6 +1012,46 @@ a:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 4px; }
   .final__score.record-glow { animation: none !important; }
 }
 
+/* --------------------------- Icon-only button (🏠) --------------------------- */
+.btn--icon {
+  flex: 0 0 auto;
+  padding: 0;
+  width: 48px;
+  min-width: 48px;
+  font-size: 1.2rem;
+}
+
+/* Wrong-only mode CTA sulla home (ambrato) */
+.btn--wrong-mode {
+  background:
+    linear-gradient(180deg, rgba(251,191,36,0.18), rgba(251,191,36,0.06)),
+    var(--bg-3);
+  border: 1px solid rgba(251,191,36,0.55);
+  color: var(--warning);
+  font-weight: 600;
+}
+.btn--wrong-mode:hover {
+  background:
+    linear-gradient(180deg, rgba(251,191,36,0.26), rgba(251,191,36,0.08)),
+    var(--bg-4);
+  border-color: rgba(251,191,36,0.85);
+  color: #ffd666;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px -6px rgba(251,191,36,0.45);
+}
+
+/* Nav-buttons: permetti wrap su mobile stretti */
+.nav-buttons {
+  display: flex;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+.nav-buttons .btn--primary { margin-left: auto; flex: 1 1 auto; }
+@media (max-width: 420px) {
+  .nav-buttons .btn--back:not(.btn--icon) { flex: 1 1 auto; }
+}
+
 /* --------------------------- Print (tidy) --------------------------- */
 @media print {
   body { background: #fff; color: #000; padding: 0; }

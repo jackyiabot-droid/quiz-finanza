@@ -46,21 +46,63 @@ function showScreen(name) {
   screens[name].classList.remove("hidden");
 }
 
+// --- Persistenza domande sbagliate (per "Ripassa solo gli sbagliati") ---
+const WRONG_KEY = "quiz_wrong_questions";
+function loadWrongSet() {
+  try {
+    const raw = localStorage.getItem(WRONG_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch { return new Set(); }
+}
+function saveWrongSet(set) {
+  localStorage.setItem(WRONG_KEY, JSON.stringify([...set]));
+}
+function markWrong(questionText) {
+  const s = loadWrongSet();
+  s.add(questionText);
+  saveWrongSet(s);
+}
+function unmarkWrong(questionText) {
+  const s = loadWrongSet();
+  if (s.delete(questionText)) saveWrongSet(s);
+}
+function updateWrongOnlyButton() {
+  const s = loadWrongSet();
+  const btn = $("wrongOnlyBtn");
+  const count = $("wrongCountHome");
+  if (!btn || !count) return;
+  count.textContent = s.size;
+  if (s.size > 0) btn.classList.remove("hidden");
+  else btn.classList.add("hidden");
+}
+
 // --- Init ---
 document.addEventListener("DOMContentLoaded", () => {
   $("bestScore").textContent = localStorage.getItem("quiz_best") || 0;
+  updateWrongOnlyButton();
 
   document.querySelectorAll(".btn--cat").forEach((btn) => {
-    btn.addEventListener("click", () => startGame(btn.dataset.category));
+    btn.addEventListener("click", () => startGame({ category: btn.dataset.category }));
   });
+
+  $("wrongOnlyBtn").addEventListener("click", () => startGame({ wrongOnly: true }));
 
   $("readyBtn").addEventListener("click", () => showQuestion());
   $("nextBtn").addEventListener("click", nextCard);
-  $("restartBtn").addEventListener("click", () => showScreen("start"));
+  $("restartBtn").addEventListener("click", goHome);
   $("backBtnLesson").addEventListener("click", goBackFromLesson);
   $("backBtnQuiz").addEventListener("click", goBackFromQuiz);
   $("reviewBtn").addEventListener("click", goReviewLastCard);
+  $("homeBtnLesson").addEventListener("click", goHome);
+  $("homeBtnQuiz").addEventListener("click", goHome);
+  $("homeBtnEnd").addEventListener("click", goHome);
 });
+
+// --- Torna alla home ---
+function goHome() {
+  updateWrongOnlyButton();
+  showScreen("start");
+}
 
 // --- Mischia array (Fisher-Yates) ---
 function shuffle(arr) {
@@ -73,9 +115,20 @@ function shuffle(arr) {
 }
 
 // --- Avvio partita ---
-function startGame(category) {
-  const pool = category === "all" ? QUESTIONS : QUESTIONS.filter((q) => q.category === category);
-  state.deck = shuffle(pool).slice(0, QUESTIONS_PER_GAME);
+// opts: { category: "all"|"finanza"|"carte"|"lavoro" } oppure { wrongOnly: true }
+function startGame(opts) {
+  let pool;
+  if (opts && opts.wrongOnly) {
+    const wrongSet = loadWrongSet();
+    pool = QUESTIONS.filter((q) => wrongSet.has(q.question));
+    if (pool.length === 0) { goHome(); return; }
+  } else {
+    const category = opts && opts.category ? opts.category : "all";
+    pool = category === "all" ? QUESTIONS : QUESTIONS.filter((q) => q.category === category);
+  }
+  // In wrong-only prendi tutti, altrimenti limita a QUESTIONS_PER_GAME
+  const limit = opts && opts.wrongOnly ? pool.length : QUESTIONS_PER_GAME;
+  state.deck = shuffle(pool).slice(0, limit);
   state.currentIndex = 0;
   state.score = 0;
   state.correct = 0;
@@ -188,10 +241,13 @@ function handleAnswer(clickedBtn, isCorrect, card) {
     }
     state.score += gained;
     state.correct++;
+    // Se avevo questa domanda nella lista sbagliate, rimuovila (recuperata)
+    unmarkWrong(card.question);
   } else {
-    // Sbaglio azzera streak
+    // Sbaglio azzera streak e salva la domanda per il ripasso futuro
     state.streak = 0;
     state.wrong++;
+    markWrong(card.question);
   }
 
   renderAnsweredState(card, ans);
