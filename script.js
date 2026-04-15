@@ -1,5 +1,6 @@
 // === QuizFinanza — logica di gioco ===
 // Flusso: LEZIONE -> INTERROGAZIONE -> feedback -> prossima lezione
+// Con supporto "Indietro" e modalità review (risposte già date restano visibili).
 
 const QUESTIONS_PER_GAME = 10;
 const POINTS_PER_CORRECT = 10;
@@ -10,6 +11,13 @@ const state = {
   score: 0,
   correct: 0,
   wrong: 0,
+  // answers[i] = {
+  //   answered: bool,
+  //   correctPicked: bool,
+  //   pickedText: string,
+  //   shuffledAnswers: [{text, isCorrect}]  // ordine stabile per la carta
+  // }
+  answers: [],
 };
 
 // Elementi DOM
@@ -34,9 +42,12 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => startGame(btn.dataset.category));
   });
 
-  $("readyBtn").addEventListener("click", showQuestion);
+  $("readyBtn").addEventListener("click", () => showQuestion());
   $("nextBtn").addEventListener("click", nextCard);
   $("restartBtn").addEventListener("click", () => showScreen("start"));
+  $("backBtnLesson").addEventListener("click", goBackFromLesson);
+  $("backBtnQuiz").addEventListener("click", goBackFromQuiz);
+  $("reviewBtn").addEventListener("click", goReviewLastCard);
 });
 
 // --- Mischia array (Fisher-Yates) ---
@@ -57,6 +68,15 @@ function startGame(category) {
   state.score = 0;
   state.correct = 0;
   state.wrong = 0;
+  // Inizializza lo stato per-carta + ordine risposte stabile
+  state.answers = state.deck.map((card) => ({
+    answered: false,
+    correctPicked: false,
+    pickedText: null,
+    shuffledAnswers: shuffle(
+      card.answers.map((text, i) => ({ text, isCorrect: i === card.correct }))
+    ),
+  }));
 
   $("qTotal").textContent = state.deck.length;
   $("lTotal").textContent = state.deck.length;
@@ -71,12 +91,21 @@ function showLesson() {
   $("lessonTopic").textContent = card.topic;
   $("lessonContent").innerHTML = card.lesson;
   $("progressBarLesson").style.width = `${(state.currentIndex / state.deck.length) * 100}%`;
+
+  // Il back dalla lezione è sempre disponibile:
+  // - se index 0 torna allo start
+  // - altrimenti torna alla domanda precedente in review
+  $("backBtnLesson").textContent = state.currentIndex === 0 ? "← Torna all'inizio" : "← Indietro";
+
   showScreen("lesson");
 }
 
 // --- Fase INTERROGAZIONE ---
+// Se la carta è già stata risposta, viene mostrata in modalità review.
 function showQuestion() {
   const card = state.deck[state.currentIndex];
+  const ans = state.answers[state.currentIndex];
+
   $("qIndex").textContent = state.currentIndex + 1;
   $("score").textContent = state.score;
   $("questionBox").textContent = card.question;
@@ -85,47 +114,65 @@ function showQuestion() {
   $("feedback").innerHTML = "";
   $("nextBtn").classList.add("hidden");
 
-  // Mischia le risposte mantenendo traccia dell'indice corretto
-  const answersWithIndex = card.answers.map((text, i) => ({ text, isCorrect: i === card.correct }));
-  const shuffled = shuffle(answersWithIndex);
-
   const answersBox = $("answers");
   answersBox.innerHTML = "";
-  shuffled.forEach((ans) => {
+
+  ans.shuffledAnswers.forEach((a) => {
     const btn = document.createElement("button");
     btn.className = "answer";
-    btn.textContent = ans.text;
-    btn.addEventListener("click", () => handleAnswer(btn, ans.isCorrect, card));
+    btn.textContent = a.text;
+    btn.addEventListener("click", () => handleAnswer(btn, a.isCorrect, card));
     answersBox.appendChild(btn);
   });
+
+  if (ans.answered) {
+    // Modalità review: mostra stato finale senza toccare il punteggio
+    renderAnsweredState(card, ans);
+  }
 
   showScreen("quiz");
 }
 
-// --- Gestione risposta ---
-function handleAnswer(clickedBtn, isCorrect, card) {
+// --- Render stato "risposto" (usato sia dopo click sia in review) ---
+function renderAnsweredState(card, ans) {
   const allBtns = document.querySelectorAll(".answer");
+  const correctText = card.answers[card.correct];
   allBtns.forEach((b) => {
     b.disabled = true;
-    if (b.textContent === card.answers[card.correct]) b.classList.add("correct");
+    if (b.textContent === correctText) b.classList.add("correct");
+    if (b.textContent === ans.pickedText && !ans.correctPicked) b.classList.add("wrong");
   });
 
   const feedback = $("feedback");
-  if (isCorrect) {
-    clickedBtn.classList.add("correct");
-    state.score += POINTS_PER_CORRECT;
-    state.correct++;
+  if (ans.correctPicked) {
     feedback.className = "feedback show correct";
     feedback.innerHTML = `✅ <strong>Giusto!</strong> ${card.explain}`;
   } else {
-    clickedBtn.classList.add("wrong");
-    state.wrong++;
     feedback.className = "feedback show wrong";
     feedback.innerHTML = `❌ <strong>Sbagliato.</strong> ${card.explain}`;
   }
 
-  $("score").textContent = state.score;
   $("nextBtn").classList.remove("hidden");
+}
+
+// --- Gestione risposta (solo prima volta) ---
+function handleAnswer(clickedBtn, isCorrect, card) {
+  const ans = state.answers[state.currentIndex];
+  if (ans.answered) return; // safety: già risposto, niente doppio punteggio
+
+  ans.answered = true;
+  ans.correctPicked = isCorrect;
+  ans.pickedText = clickedBtn.textContent;
+
+  if (isCorrect) {
+    state.score += POINTS_PER_CORRECT;
+    state.correct++;
+  } else {
+    state.wrong++;
+  }
+
+  renderAnsweredState(card, ans);
+  $("score").textContent = state.score;
 }
 
 // --- Prossima carta o fine ---
@@ -136,6 +183,27 @@ function nextCard() {
   } else {
     showLesson();
   }
+}
+
+// --- Navigazione INDIETRO ---
+function goBackFromLesson() {
+  if (state.currentIndex === 0) {
+    showScreen("start");
+    return;
+  }
+  // Torna alla domanda della carta precedente (in review se risposta)
+  state.currentIndex--;
+  showQuestion();
+}
+
+function goBackFromQuiz() {
+  // Torna alla lezione della stessa carta (per rileggere)
+  showLesson();
+}
+
+function goReviewLastCard() {
+  state.currentIndex = state.deck.length - 1;
+  showQuestion();
 }
 
 // --- Fine partita ---

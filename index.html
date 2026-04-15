@@ -2,7 +2,10 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0d1117" />
   <title>QuizFinanza — Gioco Didattico</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -41,7 +44,10 @@
         <h2 id="lessonTopic" class="lesson-topic"></h2>
         <div id="lessonContent" class="lesson-content"></div>
       </div>
-      <button id="readyBtn" class="btn btn--primary">Ho capito, interrogami →</button>
+      <div class="nav-buttons">
+        <button id="backBtnLesson" class="btn btn--back">← Indietro</button>
+        <button id="readyBtn" class="btn btn--primary">Ho capito, interrogami →</button>
+      </div>
     </section>
 
     <!-- Schermata INTERROGAZIONE -->
@@ -54,7 +60,10 @@
       <div id="questionBox" class="question"></div>
       <div id="answers" class="answers"></div>
       <div id="feedback" class="feedback"></div>
-      <button id="nextBtn" class="btn btn--primary hidden">Prossima lezione →</button>
+      <div class="nav-buttons">
+        <button id="backBtnQuiz" class="btn btn--back">← Indietro</button>
+        <button id="nextBtn" class="btn btn--primary hidden">Prossima lezione →</button>
+      </div>
     </section>
 
     <!-- Schermata finale -->
@@ -68,7 +77,10 @@
           <div>❌ Errate: <strong id="wrongCount">0</strong></div>
         </div>
       </div>
-      <button id="restartBtn" class="btn btn--primary">🔁 Rigioca</button>
+      <div class="nav-buttons">
+        <button id="reviewBtn" class="btn btn--back">← Rivedi le risposte</button>
+        <button id="restartBtn" class="btn btn--primary">🔁 Rigioca</button>
+      </div>
     </section>
 
     <footer class="app__footer">
